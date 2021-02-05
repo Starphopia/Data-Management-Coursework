@@ -1,0 +1,240 @@
+\documentclass{report}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{sectsty}
+
+\geometry{
+a4paper,
+total={170mm,257mm},
+left=23mm,
+right=24mm,
+top=15mm,
+bottom=15mm
+}
+
+\title{Data Management Assignment 2 : SQL}
+\author{pkll1g19 - Pui Kwan Lauren Lee \\ Student ID : 30736501}
+\date{May 2020}
+
+
+\begin{document}
+
+\maketitle 
+
+\section*{1. The Relational Model}
+\subsection*{EX1 Relation represented in the dataset }
+
+The relation in our spreadsheet is an instance of the following relation schema, Covid: \\
+% Relation schema, with indents to tidy things up.
+\textit{Covid(Date : dateRep, Integer : day, Integer : month, Integer : year, Integer : cases, \\ \indent\indent\indent Integer : deaths, String : countriesAndTerritories, String : geoId, \\ \indent\indent\indent String : countryterritoryCode, Integer : popData2018, String : continentExp)}
+
+\vspace{0.2cm}
+
+\subsection*{EX2 Functional dependencies that exist in the database}
+List of functional dependencies:
+\begin{itemize}
+    \item dateRep $\rightarrow$ day, month, year
+    \item day, month, year $\rightarrow$ dateRep
+    \item countriesAndTerritories $\rightarrow$ geoId, country, popData2018, continentExp
+    \item geoId $\rightarrow$ countriesAndTerritories, countryTerritoryCode popData2018, continentExp
+    \item countryTerritoryCode $\rightarrow$ countriesAndTerritories, geoId, popData2018, continentExp
+    \item dateRep, countriesAndTerritories $\rightarrow$ cases, deaths
+    \item dateRep, countryTerritoryCode $\rightarrow$ cases, deaths
+    \item dateRep, geoId $\rightarrow$ cases, deaths
+\end{itemize}
+
+Assumptions include that the same number of cases and the number of deaths can occur on different days in different countries, hence why it is not a determinant in any functional dependencies. Likewise, multiple countries belong to the same continents. Data on different countries are recorded simultaneously.
+
+The 2018 population (popData2018) can be the same for more than one country. Even if the current values are distinct, if we were to add a new country (e.g. North Korea), the population can be the same. 
+
+We are making the assumption that there is a one to one mapping between countriesAndTerritories, countryTerritoryCode (though with null values), and geoID as these the latter two seems to be abbreviations of the former.
+
+\vspace{0.2cm}
+
+\subsection*{EX3 Potential candidate keys}
+Potential candidate keys include the following:
+\begin{itemize}
+    \item dateRep, countriesAndTerritories 
+    \item dateRep, countryTerritoryCode
+    \item dateRep, geoId 
+\end{itemize}
+
+\vspace{0.2cm}
+\subsection*{EX4 Identifying a suitable primary key }
+A suitable primary key will be \textbf{dateRep, geoId} as \textbf{geoId} is designed to uniquely identify a location; \textbf{countryAndTerritories} are more likely to change if the country's name is to be changed. In addtion, \textbf{countryTerritoryCode} contains null values.
+\vspace{2mm}
+
+\section*{2. Normalisation}
+\subsection*{EX5 List any partial-key dependencies in the relation as it stands}
+The partial key dependencies that exist in the relation 
+
+\textit{Covid(\textbf{dateRep}, \textbf{geoId}, day, month, year, cases, deaths, countriesAndTerritories, countryterritoryCode, \indent\indent\indent popData2018, continentExp)} \\
+
+Partial key dependencies include:
+\begin{itemize}
+    \item dateRep $\rightarrow$ day, month, year
+    \item geoId $\rightarrow$ countriesAndTerritories, countryterritoryCode, popData2018, continentExp
+\vspace{2mm}
+\end{itemize}
+
+\subsection*{EX6 Additional relations created as part of the decomposition}
+New relations to be added:
+\begin{itemize}
+    \item \textit{DateRec(\textbf{dateRep}, day, month, year)}
+    \item \textit{Location(\textbf{geoId}, countriesAndTerritories, countryterritoryCode, popData2018, continentExp)}
+\end{itemize}
+    As well as the original relation
+\begin{itemize}
+    \item \textit{Covid(\textbf{dateRep}, \textbf{geoId}, cases, deaths)}
+\end{itemize}
+\vspace{2mm}
+
+\subsection*{EX6 Converting to 2NF}
+In order for the relation to be in 2nd Normal Form, it must be in 1st normal form with no partial key dependencies. Since the relation meets the first criteria (there are no nested/multi-values in any of the columns, and no repeating columns/rows), we only have to rid of the partial key dependencies. \\
+
+\begin{enumerate}
+\item From part 2.1, we can see that there exists partial key dependencies on dateRep and geoId. Looking at the functional dependency with dateRep, we copy over the determinant and move all the dependent attributes to a new relation. Again, dateRep is made the primary key in this new relation as it functionally determines the rest of the attributes. \\
+    
+\noindent
+\textit{Covid(\textbf{dateRep}, \textbf{geoId}, cases, deaths, countriesAndTerritories, countryterritoryCode, popData2018, \\ \indent \indent continentExp)} \\
+\textit{DateRec(\textbf{dateRep}, day, month, year)}\\
+
+\item Then repeat for the second functional dependency mentioned in 2.1: create a new relation, copy over the determinant geoId, then move all of the dependent attributes to this new dependency. \\
+
+\noindent
+\textit{Covid(\textbf{dateRep}, \textbf{geoId}, cases, deaths)} \\
+\textit{DateRec(\textbf{dateRep}, day, month, year)}\\
+\textit{Locations(\textbf{geoId}, countriesAndTerritories, countryterritoryCode, popData2018, continentExp)} \\
+
+\item Our relational database schema is the following: \vspace{2mm}\\
+\noindent
+\textit{Covid(\textbf{Date : dateRep}, \textbf{String : geoId}, Integer : cases, Integer : deaths)} \\
+\textit{DateRec(\textbf{Date : dateRep}, Integer : day, Integer : month, Integer : year)}\\
+\textit{Locations(\textbf{String : geoId}, String : countriesAndTerritories, String : countryterritoryCode, \\ Integer : popData2018, String : continentExp)} \\
+\end{enumerate}
+
+\noindent Primary keys are in bold.
+\vspace{2mm} 
+
+\subsection*{EX7 Transitive dependencies present }
+There are no transitive dependencies.
+\textbf{Covid} - no transitive dependencies, as all attributes depend on \textbf{dateRep, geoId} only \\
+\textbf{DateRec} - no transitive dependencies, all attributes depend on \textbf{dateRep} \\
+\textbf{Locations} - no transistive dependencies, as even with the dependencies following the A $\rightarrow$ B $\rightarrow$ C, B $\rightarrow$ A.
+
+\begin{itemize} 
+\item geoId $\rightarrow$ countriesAndTerritories $\rightarrow$ countryterritoryCode $\rightarrow$ popData2018 
+\item geoId $\rightarrow$ countryterritoryCode $\rightarrow$ countriesAndTerritories $\rightarrow$ popData2018
+\item geoId $\rightarrow$ countriesAndTerritories $\rightarrow$ countryterritoryCode $\rightarrow$ continentExp 
+\item geoId $\rightarrow$ countryterritoryCode $\rightarrow$ countriesAndTerritories $\rightarrow$ continentExp
+\end{itemize}
+\vspace{2mm}
+
+\subsection*{EX8 Converting to 3NF}
+As there are no transitive dependencies in any of the tables, it is already in 3NF.
+\item Our relational database schema is still the following: \vspace{2mm}\\
+\noindent
+\textit{Covid(\textbf{Date : dateRep}, \textbf{String : geoId}, Integer : cases, Integer : deaths)} \\
+\textit{DateRec(\textbf{Date : dateRep}, Integer : day, Integer : month, Integer : year)}\\
+\textit{Locations(\textbf{String : geoId}, String : countriesAndTerritories, String : countryterritoryCode, \\ Integer : popData2018, String : continentExp)} \\
+\vspace{2mm}
+
+\subsection*{EX9: Is the relation in Boyce-Codd Normal Form? }
+All determinants in the relations apart from \textbf{CountryTerritory} are the candidate keys or determines the candidate keys. Thus they are in Boyce-Codd Normal Form. \textbf{CountryTerritory} is in 3NF and not BCNF as it violates the requirement for all determinants needing to be the candidate key. 
+
+Below shows the functional dependencies in each relation.
+
+\begin{itemize}
+    \item \textbf{Covid} 
+        \begin{itemize}
+            \item dateRep, geoId $\rightarrow$ cases, deaths (Candidate key)
+        \end{itemize}
+    \item \textbf{DateRec}
+        \begin{itemize}
+            \item dateRep $\rightarrow$ day, month, year (Candidate key)
+            \item day, month, year $\rightarrow$ dateRep  (Candidate key)
+        \end{itemize}
+   \item \textbf{Locations}
+        \begin{itemize}
+            \item geoId $\rightarrow$ countryTerritoryCode, countriesAndTerritories, popData2018, continentExp (Candidate key)
+            \item countriesAndTerritories $\rightarrow$ countryTerritoryCode, geoID, popData2018, continentExp (Candidate key)
+            \item countryTerritoryCode $\rightarrow$ geoID, countriesAndTerritories, popData2018, continentExp (Candidate key)
+            
+        \end{itemize}
+\end{itemize}
+\vspace{2mm}
+
+\section*{3. Modelling}
+\subsection*{EX10}
+The dataset.sql file contains the sql statement for creating and populating the dataset table.
+\subsection*{EX11}
+Indexes have been added to the foreign key attributes as they are often used for joins. These include \textbf{dateRepIndex} and \textbf{geoIDIndex} (these being unique). Additionally, because we may look at individual continent's, we will add an index to \textbf{continentExpIndex}. 
+\subsection*{EX12} 
+The ex12.sql contains the SQL needed.
+\subsection*{EX13} Database can be reconstructed by executing dataset.sql, ex11.sql, and ex12.sql.
+
+\vspace{2mm}
+
+\section*{4. Querying}
+\subsection*{EX14}
+\begin{verbatim}
+    SELECT SUM(cases) AS "total cases", SUM(deaths) AS "total deaths" FROM Covid;
+\end{verbatim}
+
+\subsection*{EX15}
+\begin{verbatim}
+    SELECT Covid.dateRep AS date, cases AS "number of cases" FROM Covid
+    JOIN DateRec ON DateRec.dateRep = Covid.dateRep
+    WHERE Covid.geoID = "UK"
+    ORDER BY year, month, day;
+\end{verbatim}
+
+\subsection*{EX16}
+\begin {verbatim}
+    SELECT Locations.continentExp AS continent, Covid.dateRep, 
+           SUM(Covid.cases) AS "number of cases", SUM(Covid.deaths) AS "number of deaths"
+    FROM Locations
+    INNER JOIN Covid ON Covid.geoID = Locations.geoID
+    INNER JOIN DateRec ON DateRec.dateRep = Covid.dateRep
+    GROUP BY Locations.continentExp, DateRec.dateRep
+    ORDER BY Locations.continentExp, DateRec.year, DateRec.month, DateRec.year;
+\end{verbatim}
+
+\subsection*{EX17}
+\begin{verbatim}
+    SELECT Locations.countriesAndTerritories AS country,
+           SUM(Covid.cases) * 100.0 / Locations.popData2018 AS "% cases of population", 
+           SUM(Covid.deaths) * 100.0 / Locations.popData2018 AS "% deaths of population"
+    FROM Locations
+    INNER JOIN Covid ON Covid.geoID = Locations.geoID
+    GROUP BY country
+    ORDER BY country;
+\end{verbatim}
+
+\subsection*{EX18}
+\begin{verbatim}
+    SELECT Locations.countriesAndTerritories AS 'country name',
+    SUM(Covid.deaths) * 100.0 / SUM(Covid.cases) AS "% deaths of country cases"
+    FROM Locations 
+    JOIN Covid ON Locations.geoID = Covid.geoID
+    GROUP BY Locations.countriesAndTerritories
+    ORDER BY "% deaths of country cases" DESC
+    LIMIT 10;
+\end{verbatim}
+
+\subsection*{EX19}
+\begin{verbatim}
+    SELECT DateRec.dateRep, SUM(Covid.deaths) 
+    OVER (ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS 'cumulative UK deaths',
+    SUM(Covid.cases) 
+    OVER (ORDER BY DateRec.year, DateRec.month, DateRec.day 
+          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS 'cumulative UK cases'
+    FROM Covid 
+    INNER JOIN DateRec ON Covid.dateRep = DateRec.dateRep
+    WHERE geoID = "UK"
+    ORDER BY DateRec.year, DateRec.month, DateRec.day;
+\end{verbatim}
+
+
+\end{document}
